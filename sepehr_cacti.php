@@ -9,7 +9,7 @@
 
  */
 // Config:
-$sepehr_env_path = 'E:\programming\PHP\sepehr\sepehr\.env';
+$sepehr_env_path = '/path/to/.env';
 $aria2_host      = '127.0.0.1';
 $aria2_port      = '6800';
 
