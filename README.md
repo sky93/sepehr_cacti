@@ -1,4 +1,4 @@
-# sepehr cacti
+# Sepehr Cacti Script
 Cacti Script for monitoring Sepehr System
 
 It gives you this information after every poll:
