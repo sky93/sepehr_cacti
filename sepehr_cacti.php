@@ -86,6 +86,7 @@ class aria2{
 
 
 error_reporting(E_ERROR);
+
 //Checks if mysqli library is installed
 if (! function_exists('mysqli_connect')) {
     die("mysqli does not installed! Install it first!");
@@ -124,11 +125,26 @@ if ($result = mysqli_query($conn, "SELECT id FROM users WHERE last_seen > '$time
 }
 
 
-// Get number of downloads in queue
-$time = date("Y-m-d H:i:s", time() - 60);
-if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE state is NULL and deleted = 0")) {
+// Get Total number of downloads in queue
+if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE (state != 0 OR state IS NULL) and deleted = 0")) {
     $row_cnt = mysqli_num_rows($result);
     echo " downloads:" . $row_cnt;
+    mysqli_free_result($result);
+} else {
+    die ("Something went wrong when was trying to get number of downloads in queue.");
+}
+// Get Total number of paused downloads in queue
+if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE (state = -2) and deleted = 0")) {
+    $row_cnt = mysqli_num_rows($result);
+    echo " paused_downloads:" . $row_cnt;
+    mysqli_free_result($result);
+} else {
+    die ("Something went wrong when was trying to get number of downloads in queue.");
+}
+// Get Total number of downloads with error in queue
+if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE (state > 0) and deleted = 0")) {
+    $row_cnt = mysqli_num_rows($result);
+    echo " error_downloads:" . $row_cnt;
     mysqli_free_result($result);
 } else {
     die ("Something went wrong when was trying to get number of downloads in queue.");
@@ -136,8 +152,7 @@ if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE state is N
 
 
 // Get length of downloads in queue
-$time = date("Y-m-d H:i:s", time() - 60);
-if ($result = mysqli_query($conn, "SELECT sum(length) AS length, sum(completed_length) AS completed_length FROM download_list WHERE state is NULL and deleted = 0")) {
+if ($result = mysqli_query($conn, "SELECT sum(length) AS length, sum(completed_length) AS completed_length FROM download_list WHERE (state != 0 OR state IS NULL) and deleted = 0")) {
     $row = mysqli_fetch_assoc($result);
     echo " ttl_dl_length:" . $row['length'] . " cmpltd_dl_length:" .  $row['completed_length'];
     mysqli_free_result($result);
@@ -147,7 +162,6 @@ if ($result = mysqli_query($conn, "SELECT sum(length) AS length, sum(completed_l
 
 
 // Get number of downloaded file in storage
-$time = date("Y-m-d H:i:s", time() - 60);
 if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE state = 0 and deleted = 0")) {
     $row_cnt = mysqli_num_rows($result);
     echo " storage_files_ct:" . $row_cnt;
@@ -158,7 +172,6 @@ if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE state = 0 
 
 
 // Get length of downloaded files
-$time = date("Y-m-d H:i:s", time() - 60);
 if ($result = mysqli_query($conn, "SELECT sum(length) AS length FROM download_list WHERE state = 0 and deleted = 0")) {
     $row = mysqli_fetch_assoc($result);
     echo " cmp_files_length:" . $row['length'];
