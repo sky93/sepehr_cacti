@@ -4,7 +4,7 @@
   ______________________________________________________________________
  \                                                                     \
  \ Sepehr Cacti script                                                 \
- \ Version 1.0 (2/5/2016)                                              \
+ \ Version 2.0 (2/7/2016)                                              \
  \_____________________________________________________________________\
 
  */
@@ -149,12 +149,57 @@ if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE (state > 0
 } else {
     die ("Something went wrong when was trying to get number of downloads in queue.");
 }
+// Get Total number of downloads in queue
+if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE (state is NULL) and deleted = 0")) {
+    $row_cnt = mysqli_num_rows($result);
+    echo " normal_downloads:" . $row_cnt;
+    mysqli_free_result($result);
+} else {
+    die ("Something went wrong when was trying to get number of downloads in queue.");
+}
+// Get Total number of downloading files
+if ($result = mysqli_query($conn, "SELECT id FROM download_list WHERE (state = -1) and deleted = 0")) {
+    $row_cnt = mysqli_num_rows($result);
+    echo " dling_downloads:" . $row_cnt;
+    mysqli_free_result($result);
+} else {
+    die ("Something went wrong when was trying to get number of downloads in queue.");
+}
 
 
 // Get length of downloads in queue
 if ($result = mysqli_query($conn, "SELECT sum(length) AS length, sum(completed_length) AS completed_length FROM download_list WHERE (state != 0 OR state IS NULL) and deleted = 0")) {
     $row = mysqli_fetch_assoc($result);
-    echo " ttl_dl_length:" . $row['length'] . " cmpltd_dl_length:" .  $row['completed_length'];
+    echo " ttl_dl_length:" . $row['length'];
+    mysqli_free_result($result);
+} else {
+    die ("Something went wrong when was trying to get number of downloads in queue.");
+}
+
+// Get length of downloads in queue
+if ($result = mysqli_query($conn, "SELECT id, completed_length FROM download_list WHERE (state != 0 OR state IS NULL) and deleted = 0")) {
+    $aria2 = new aria2($aria2_host, $aria2_port);
+    $dl = 0;
+    while ($row = mysqli_fetch_assoc($result)) {
+        $downloaded_size = 0;
+        if ( isset($aria2->tellStatus(str_pad($row['id'], 16, '0', STR_PAD_LEFT))["result"]) ) {
+            $result1 = $aria2->tellStatus(str_pad($row['id'], 16, '0', STR_PAD_LEFT))["result"];
+        } else {
+            $result1 = null;
+        }
+
+        if (isset($result1['completedLength'])) {
+            $downloaded_size = $result1['completedLength'];
+        }
+
+        if ($downloaded_size == 0) {
+            $downloaded_size = $row['completed_length'];
+        }
+
+        $dl += $downloaded_size;
+
+    }
+    echo " cmpltd_dl_length:" . $dl;
     mysqli_free_result($result);
 } else {
     die ("Something went wrong when was trying to get number of downloads in queue.");
