@@ -1,19 +1,19 @@
 <?php
 
+
 /**
   ______________________________________________________________________
  \                                                                     \
  \ Sepehr Cacti script                                                 \
- \ Version 2.0 (2/7/2016)                                              \
+ \ Version 2.1 (5/23/2016)                                              \
  \_____________________________________________________________________\
 
  */
 // Config:
-$sepehr_env_path = '/path/to/.env';
+$sepehr_env_path = '/usr/share/nginx/sepehr/.env'; // Path to sepehr config file
 $aria2_host      = '127.0.0.1';
 $aria2_port      = '6800';
-
-
+$loop_duration_file = '/usr/share/tuletto/last_loop_duration'; // Path to tuletto Log
 
 
 if (! file_exists($sepehr_env_path) || ! is_readable($sepehr_env_path)) {
@@ -115,7 +115,7 @@ if ($result = mysqli_query($conn, "SELECT id FROM users WHERE email <> ''")) {
 
 
 // Get online users
-$time = date("Y-m-d H:i:s", time() - 60);
+$time = date("Y-m-d H:i:s", time() - 125);
 if ($result = mysqli_query($conn, "SELECT id FROM users WHERE last_seen > '$time'")) {
     $row_cnt = mysqli_num_rows($result);
     echo " online_users:" . $row_cnt;
@@ -233,4 +233,28 @@ if (! @fsockopen($host, $aria2_port, $errno, $errstr, 1)) {
 }else {
     $aria2 = new aria2($aria2_host, $aria2_port);
     echo " aria2_speed:" . ($aria2->getGlobalStat()['result']['downloadSpeed'] * 8);
+}
+
+
+// Get last loop direction
+// Checks if aria2 is online
+if (file_exists($loop_duration_file)){
+    $line = fgets(fopen($loop_duration_file, 'r'));
+    if (is_numeric($line)){
+        echo " loop_duration:" . $line;
+    } else {
+        echo " loop_duration:0";
+    }
+} else {
+    echo " loop_duration:0";
+}
+
+
+// Get Total Payment
+if ($result = mysqli_query($conn, "select cast((sum(`payments`.`amount`) / 10) as signed) AS `TOTAL MONEY` from `payments` where (`payments`.`settleResponse` = 0)")) {
+ $row = mysqli_fetch_assoc($result);
+    echo " ttl_money:" . $row['TOTAL MONEY'];
+    mysqli_free_result($result);
+} else {
+    die ("Something went wrong when was trying to get total payment.");
 }
