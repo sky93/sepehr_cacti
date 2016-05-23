@@ -19,6 +19,8 @@ It gives you this information after every poll:
 
 8- Aria2 current speed
 
+9- Total Payments And Many more
+
 
 ## Install
 Just copy the script in `<cacti directory>/scripts/`
